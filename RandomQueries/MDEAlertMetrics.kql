@@ -12,4 +12,4 @@ SecurityAlert
 | where Category == 'Other'
 | extend AssignedTo=tostring(InitiatedBy.user.userPrincipalName), AlertName=ActivityDisplayName, AlertSeverity='Low',Description=ResultDescription
 | extend isUser=AssignedTo contains '@bluehalo'
-| summarize Count=count() by AssignedTo, isUser, AlertName, AlertSeverity, Description)
+| summarize Count=count() by AssignedTo, isUser, AlertName, AlertSeverity, Description
