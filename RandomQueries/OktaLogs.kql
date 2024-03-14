@@ -1,0 +1,12 @@
+let starttime = datetime(yyyy-mm-dd hh:mm);
+let endtime = datetime(yyyy-mm-dd hh:mm);
+let username = "first.last";
+Okta_CL
+| where TimeGenerated between (starttime .. endtime)
+| where * contains username
+//quick results
+//| project TimeGenerated, displayMessage_s, eventType_s, actor_alternateId_s, outcome_result_s, debugContext_debugData_audience_s
+//
+//more extensive results
+| project-reorder TimeGenerated, displayMessage_s, eventType_s, actor_alternateId_s, outcome_result_s, outcome_reason_s, debugContext_debugData_logOnlySecurityData_s, debugContext_debugData_audience_s, actor_type_s,  client_userAgent_rawUserAgent_s, client_device_s, client_userAgent_os_s, client_ipAddress_s, client_geographicalContext_state_s, client_geographicalContext_country_s, debugContext_debugData_requestUri_s, debugContext_debugData_url_s, target_s
+| sort by TimeGenerated desc
