@@ -1,0 +1,15 @@
+SecurityAlert
+| where Status != 'New' and (ProductName == 'Azure Azure Advanced Threat Protection' or 
+        ProductName == 'Microsoft 365 Defender' or 
+        ProductName == 'Microsoft Cloud App Security' or
+        ProductName == 'Microsoft Defender Advanced Threat Protection' or 
+        ProductName == 'Office 365 Advanced Threat Protection')
+| extend AssignedTo = tostring(parse_json(ExtendedProperties).AssignedTo)
+| extend isUser=AssignedTo contains '@companyname'
+| partition hint.strategy=native by SystemAlertId (top 1 by isUser desc)
+| summarize Count=count() by AssignedTo, isUser, AlertName, AlertSeverity, Description
+| union (AuditLogs
+| where Category == 'Other'
+| extend AssignedTo=tostring(InitiatedBy.user.userPrincipalName), AlertName=ActivityDisplayName, AlertSeverity='Low',Description=ResultDescription
+| extend isUser=AssignedTo contains '@bluehalo'
+| summarize Count=count() by AssignedTo, isUser, AlertName, AlertSeverity, Description)
