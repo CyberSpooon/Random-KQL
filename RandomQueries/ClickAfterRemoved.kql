@@ -1,5 +1,5 @@
 AlertEvidence
-| where Title contains "removed after deliver"
+| where Title contains "removed after delivery"
 | join UrlClickEvents on (NetworkMessageId)
 | extend AlertTitle=Title, ClickTimestamp=Timestamp1, AccountUpn=AccountUpn1
 | project
