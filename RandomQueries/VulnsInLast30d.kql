@@ -1,0 +1,13 @@
+let LoggedOnDevices = DeviceLogonEvents
+| where LogonType == 'Interactive'
+| where Timestamp > ago(30d)
+| summarize by DeviceName, DeviceId;
+let LoggedOnDevicesWithVulns = DeviceTvmSoftwareVulnerabilities
+| summarize arg_max(SoftwareVersion, SoftwareName) by DeviceId,DeviceName,OSPlatform,SoftwareVendor,CveId,VulnerabilitySeverityLevel
+| join kind=leftsemi LoggedOnDevices on (DeviceId);
+let LoggedOnDevicesWithVulnsAndKB = DeviceTvmSoftwareVulnerabilitiesKB
+| join kind=inner LoggedOnDevicesWithVulns on (CveId);
+LoggedOnDevicesWithVulnsAndKB
+| summarize count() by CveId, IsExploitAvailable, VulnerabilitySeverityLevel, SoftwareName
+| project-rename ExploitedInTheWild=IsExploitAvailable, VulnerableDevices=count_, VulnerableSoftware=SoftwareName
+| project-reorder CveId, VulnerableSoftware,VulnerabilitySeverityLevel, ExploitedInTheWild, VulnerableDevices
