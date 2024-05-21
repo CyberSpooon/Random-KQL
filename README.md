@@ -1,2 +1,2 @@
 # Random-KQL
-A random mix of KQL queries that I find myself frequently using.
+A random mix of KQL queries that I find myself frequently using. Most of them suck...
