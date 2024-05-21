@@ -1,0 +1,38 @@
+//Title: IP Lookup
+//Status: Experimental
+//Description: This query can be used to search for all IP addresses added to the 'SusIPs' datatable. This query can be used for hunting for IOCs from TIPs and other industry reports. 
+//             It is a slightly modified version of the query found in the references field and looks in DeviceNetworkEvents and DeviceProcess Events for commandline references.
+//References: 
+//  https://www.kqlsearch.com/query/Outboundconhostconnection&clokgai4n00uymc0obivfuo2h
+//Author: Alden James
+//Created: 2024/05/21
+//Modified: 2024/05/21
+//Tags:
+//  attack.reconnaissance
+//Falsepositives: 
+//------------------------------------------------------------------
+let SearchWindow = 48h;
+let SusIPs = datatable (IP:string) 
+[
+    "40.126.29.9",
+    "13.226.23.207"
+];
+let IPRegex = '[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}';
+// Collect all network events to the RemoteIP
+let NetworkEvents = DeviceNetworkEvents
+    | where Timestamp > ago(SearchWindow)
+    | where RemoteIP in (SusIPs)
+    | project Timestamp, DeviceName, ActionType, RemoteIP, RemotePort, RemoteUrl, InitiatingProcessCommandLine, InitiatingProcessAccountSid
+;
+// Collect all commandline references of the IP from InitiatingProcessCommandLine and ProcessCommandLine
+let CommandLineReferences = DeviceProcessEvents
+    | where Timestamp > ago(SearchWindow)
+    | extend CMDIP = extract(IPRegex, 0, ProcessCommandLine)
+    | extend InitCMDIP = extract(IPRegex, 0, InitiatingProcessCommandLine)
+    | where CMDIP in (SusIPs) or InitCMDIP in (SusIPs)
+    | project Timestamp, DeviceName, ActionType, CMDIP, InitCMDIP, FolderPath, ProcessCommandLine, AccountSid
+;
+// Combine results
+(union isfuzzy=true
+    (NetworkEvents),
+    (CommandLineReferences)) 
