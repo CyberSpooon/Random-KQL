@@ -4,7 +4,7 @@
 //             It is a slightly modified version of the query found in the references field and looks in DeviceNetworkEvents and DeviceProcess Events for commandline references.
 //References: 
 //  https://www.kqlsearch.com/query/Outboundconhostconnection&clokgai4n00uymc0obivfuo2h
-//Author: Alden James
+//Author: 
 //Created: 2024/05/21
 //Modified: 2024/05/21
 //Tags:
