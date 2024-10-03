@@ -4,7 +4,7 @@
 //             If a user clicked a link in a suspicious email before MDE could remove the suspicious email, this alert will fire.
 //             This rule can also be used retroactively for hunting purposes.
 //References: 
-//Author: Alden James
+//Author: 
 //Created: 2024/05/16
 //Modified: 2024/05/16
 //Tags:
