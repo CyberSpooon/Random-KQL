@@ -1,55 +1,55 @@
 //Title: Unapproved RMM Software Detected
-//Description: Detects installation or use of unapproved RMM software. Based on lawndoc's UndocumentedRMM query.
+//Description: Detects installation or use of unapproved RMM software
 //References: 
 //  https://github.com/0x706972686f/RMM-Catalogue
 //  https://github.com/lawndoc/AdvancedHuntingQueries/blob/f449fd78124543f2269dd6656017b3d1035f5df2/Detection-Rules/UndocumentedRMM.kusto
-//Author: 
+//Author: CyberSpooon
 //Created: 2024/04/04
-//Modified: 2024/04/16
+//Modified: 2024/08/19
 //------------------------------------------------------------------
+// Change the timeframe variable to adjust how far back the query will search
+let timeframe = 30d;
 // EXCLUSIONS GO HERE, PLEASE LEAVE A COMMENT WITH EXPLANATION
 let ApprovedRMM = datatable(Software:string, ApprovedDevice:string) 
 [
     "Quick Assist", "",             // Installed on Windows by Default
-    "TeamViewer", "",               // Approved RMM Software for IT
+    "TeamViewer", "",               // Example: Approved RMM Software for IT
 ];
-//Parses and formats the list from GitHub
+// Parses and formats the list from GitHub
 let RMMCatalogue = materialize(
-(externaldata(GitHubRMMList: string) [@"https://raw.githubusercontent.com/0x706972686f/RMM-Catalogue/main/rmm.csv"] with (format="txt", ignoreFirstRecord=True))
-    | extend ParsedRMMList = parse_csv(GitHubRMMList)
-    | extend 
-        Software = tostring(ParsedRMMList[0]),
-        Domain = tostring(ParsedRMMList[1]),
-        Executables = parse_csv(tolower(tostring(ParsedRMMList[2]))),
-        Category = tostring(ParsedRMMList[3])
-    | mv-expand Executables = Executables
-    | extend Executables = replace_string(tostring(Executables), "*.exe", "")
-    | project Executables, Software)
+(externaldata(Software:string, Domain:string, Executables:string, Category:string) [@"https://raw.githubusercontent.com/0x706972686f/RMM-Catalogue/main/rmm.csv"] with (format="csv", ignoreFirstRecord=True))
+| extend ParsedRMMexe = parse_csv(tolower(tostring(Executables)))
+| mv-expand Executables = ParsedRMMexe
+| extend Executables = replace_string(tostring(Executables), "*.exe", "")
+| extend Executables = replace_string(tostring(Executables), "*.msi", "")
+| where isnotempty(Executables)
+| project Executables,Software)
 ;
-//Could be changed to work with NRT if external data is allowed again. If so, comment all lines following this block out----------------
+// Could be changed to work as an NRT rule if external data is allowed in NRT rules again. If so, comment all lines following this block out----------------
 // DeviceProcessEvents
 //     | where ActionType != "FileDeleted"
 //     | extend Executables = tolower(FileName)
 //     | where Executables in~ (RMMCatalogue)
 // //Add RMM Exclusions here------------------------------------------------------------------------------
 //     | where FolderPath !contains "TeamViewer"
-//Finds all instances of RMM used according to the GitHub list
+// Finds all instances of RMM used according to the GitHub list
 let RMMUsed = (
     RMMCatalogue
     | extend Executables = tolower(Executables)
     | join kind=inner (
         union DeviceFileEvents, DeviceProcessEvents, DeviceNetworkEvents
+        | where Timestamp > ago(timeframe)
         | where ActionType != "FileDeleted"
         | extend Executables = tolower(FileName))
     on Executables)
 ;
-//Creates a list of all whitelisted RMM software on endpoints
+// Creates a list of all whitelisted RMM software on endpoints
 let ExcludedRMM = RMMUsed
     | join kind=inner ApprovedRMM on Software
     | where DeviceName contains ApprovedDevice
     | distinct Software, DeviceName
 ;
-//Removes approved entries from full RMM list and displays final results
+// Removes approved entries from full RMM list and displays final results
 RMMUsed
     | join kind=anti ExcludedRMM on Software,DeviceName
     | summarize Timestamp=max(Timestamp) by Software, DeviceName
