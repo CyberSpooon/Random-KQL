@@ -1,5 +1,5 @@
 let emails = EmailEvents
-| where RecipientEmailAddress == "bh-phishing@bluehalo.com" and Subject startswith "Phishing:" and Subject !startswith "Phishing:[REMEDIAL TRAINING]" and Subject != "Phishing:[EXTERNAL] - Microsoft 365 security: You have messages in quarantine"
+| where RecipientEmailAddress == "phishingemail@company.com" and Subject startswith "Phishing:" and Subject !startswith "Phishing:[REMEDIAL TRAINING]" and Subject != "Phishing:[EXTERNAL] - Microsoft 365 security: You have messages in quarantine"
 | extend subnoext=replace_string(Subject,"Phishing:[EXTERNAL]","")
 | extend sh1=substring(subnoext, 0, strlen(subnoext)/2), sh2=substring(subnoext, strlen(subnoext)/2);
 emails
