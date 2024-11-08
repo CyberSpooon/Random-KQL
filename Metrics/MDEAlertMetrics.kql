@@ -11,5 +11,5 @@ SecurityAlert
 | union (AuditLogs
 | where Category == 'Other'
 | extend AssignedTo=tostring(InitiatedBy.user.userPrincipalName), AlertName=ActivityDisplayName, AlertSeverity='Low',Description=ResultDescription
-| extend isUser=AssignedTo contains '@bluehalo'
+| extend isUser=AssignedTo contains '@company'
 | summarize Count=count() by AssignedTo, isUser, AlertName, AlertSeverity, Description
