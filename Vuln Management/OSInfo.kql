@@ -1,0 +1,12 @@
+// Add the list of devicesnames you want to check patch status on to the "ToValidate" datatable
+let ToValidate = datatable (MachineName:string) [
+"machine1",
+"machine2"
+];
+// Searches for system info of all machines listed in the "ToValidate" datatable
+DeviceInfo
+| where Timestamp > ago(30d)
+| where DeviceName in (ToValidate)
+| summarize LastSeen=max(Timestamp) by DeviceName,DeviceId,OSDistribution,OSVersionInfo,OSPlatform,OSVersion,ClientVersion
+| project-reorder LastSeen
+| sort by LastSeen desc
