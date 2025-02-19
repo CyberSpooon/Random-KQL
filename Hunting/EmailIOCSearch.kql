@@ -1,0 +1,61 @@
+let Search = dynamic([
+""
+]);
+let attachments = EmailAttachmentInfo
+| where 
+        FileName has_any (Search) or
+        SHA256 has_any (Search)
+| extend Type = "Attachment";
+let urls = EmailUrlInfo
+| where 
+        Url has_any (Search)
+| extend Type = "Url";
+EmailEvents
+| where 
+        SenderMailFromAddress has_any (Search) or
+        SenderFromAddress has_any (Search) or
+        SenderDisplayName has_any (Search) or
+        SenderMailFromDomain has_any (Search) or
+        SenderFromDomain has_any (Search) or
+        Subject has_any (Search)
+| extend Type = "Email Event"
+| join kind=fullouter attachments on NetworkMessageId
+| join kind=fullouter urls on NetworkMessageId
+| where not(Subject startswith "Phishing:" and DistributionList == "distrolist@company.com")
+| project 
+        Timestamp=coalesce(Timestamp, Timestamp1, Timestamp2),
+        EventType=coalesce(Type, Type1, Type2),
+        NetworkMessageId=coalesce(NetworkMessageId,NetworkMessageId1,NetworkMessageId2),
+        SenderFromAddress=coalesce(SenderFromAddress,SenderFromAddress1),
+        SenderDisplayName=coalesce(SenderDisplayName,SenderDisplayName1),
+        RecipientEmailAddress=coalesce(RecipientEmailAddress,RecipientEmailAddress1),
+        RecipientObjectId=coalesce(RecipientObjectId,RecipientObjectId1),
+        ThreatTypes=coalesce(ThreatTypes,ThreatTypes1),
+        DetectionMethods=coalesce(DetectionMethods,DetectionMethods1),
+        ReportId=coalesce(ReportId,ReportId1,ReportId2),
+        Url,
+        UrlDomain,
+        UrlLocation,
+        FileName,
+        SHA256,
+        InternetMessageId,
+        SenderMailFromAddress,
+        SenderMailFromDomain,
+        SenderFromDomain,
+        Subject,
+        EmailClusterId,
+        EmailDirection,
+        DeliveryAction,
+        DeliveryLocation,
+        ConfidenceLevel,
+        AuthenticationDetails,
+        AttachmentCount,
+        UrlCount,
+        EmailLanguage,
+        Connectors,
+        OrgLevelAction,
+        OrgLevelPolicy,
+        LatestDeliveryLocation,
+        DistributionList
+| sort by Timestamp desc
+| project-reorder Timestamp,EventType,NetworkMessageId,Subject, SenderFromAddress,SenderDisplayName,RecipientEmailAddress
