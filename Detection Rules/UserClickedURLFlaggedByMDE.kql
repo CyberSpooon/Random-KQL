@@ -34,10 +34,13 @@ UrlClickEvents
 | project-away *1
 | project-reorder Timestamp,Url,ActionType, IsClickedThrough, EmailReceivedTimestamp,NetworkMessageId, AccountUpn,IPAddress, EmailSubject,Sender,AlertGeneratedTimestamp,AlertTitle,AlertId
 ;
-//Correlate user who clicked link to their registered device 
-DeviceLogonEvents
-| project DeviceId,DeviceName, AccountUpn=AccountName
-| where DeviceName !endswith "company.com" and AccountUpn endswith "company.com"
-| join UserClicks on (AccountUpn)
-| project-away *1
-| project-reorder Timestamp,Url,ActionType, IsClickedThrough, EmailReceivedTimestamp,NetworkMessageId, AccountUpn,IPAddress,DeviceId, DeviceName, EmailSubject,Sender,AlertGeneratedTimestamp,AlertTitle,AlertId
+UserClicks
+
+// The device correlation doesnt work with detection rules for some reason. need to figure out why
+// Correlate user who clicked link to their registered device 
+// DeviceLogonEvents
+// | project DeviceId,DeviceName, AccountUpn=AccountName
+// | where DeviceName !endswith "company.com" and AccountUpn endswith "company.com"
+// | join UserClicks on (AccountUpn)
+// | project-away *1
+// | project-reorder Timestamp,Url,ActionType, IsClickedThrough, EmailReceivedTimestamp,NetworkMessageId, AccountUpn,IPAddress,DeviceId, DeviceName, EmailSubject,Sender,AlertGeneratedTimestamp,AlertTitle,AlertId
